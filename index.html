@@ -138,28 +138,20 @@
     /* ─── HERO ──────────────────────────────────────────────────────── */
     .hero {
       min-height: 100svh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       position: relative;
       overflow: hidden;
     }
 
     .hero-left {
-      background: var(--linen);
+      background: linear-gradient(to right, rgba(245,240,232,.94) 0%, rgba(245,240,232,.82) 45%, rgba(245,240,232,.15) 80%, rgba(245,240,232,0) 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
       padding: 8rem 4rem 4rem 5rem;
       position: relative;
-      z-index: 1;
-    }
-    .hero-left::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0; bottom: 0;
-      width: 60px;
-      background: linear-gradient(to right, transparent, var(--cream));
       z-index: 2;
+      max-width: 700px;
+      width: 100%;
     }
 
     .hero-eyebrow {
@@ -218,8 +210,12 @@
     .btn-primary:hover { background: var(--iron-lt); transform: translateY(-2px); }
 
     .hero-right {
-      position: relative;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      z-index: 1;
     }
     .hero-right .hero-img-wrap {
       position: absolute;
@@ -707,13 +703,13 @@
     /* ─── TRUST STRIP ───────────────────────────────────────────────── */
     .trust-strip {
       background: var(--cream);
-      padding: 0 2.5rem 5rem;
+      padding: 0 0 5rem;
     }
     .trust-strip-inner {
-      max-width: 960px;
-      margin: 0 auto;
+      max-width: 100%;
+      margin: 0;
       background: var(--linen);
-      border-radius: 6px;
+      border-radius: 0;
       padding: 3.5rem 3rem;
     }
     .trust-grid {
@@ -1083,14 +1079,12 @@
         border-bottom: 1px solid rgba(139,111,82,.15);
       }
 
-      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero { min-height: 100svh; }
       .hero-left {
         padding: 7rem 1.5rem 3rem;
-        order: 2;
+        max-width: 100%;
+        background: linear-gradient(to bottom, rgba(245,240,232,.95) 0%, rgba(245,240,232,.7) 45%, rgba(245,240,232,0) 100%);
       }
-      .hero-left::after { display: none; }
-      .hero-right { height: 55vmax; order: 1; }
-      .hero-badge { left: 1rem; bottom: 1rem; }
       .hero-scroll { display: none; }
 
       .about-grid { grid-template-columns: 1fr; gap: 3rem; }
@@ -1193,10 +1187,6 @@
         <text x="300" y="680" text-anchor="middle" font-family="Georgia, serif" font-size="11" letter-spacing="8" fill="rgba(245,240,232,.4)" text-transform="uppercase">CABO TORIL</text>
       </svg>
     </div>
-    <div class="hero-badge">
-      <strong>✦</strong>
-      <p>Piezas artesanales únicas</p>
-    </div>
     <div class="hero-scroll">
       <div class="hero-scroll-line"></div>
       <span>Scroll</span>
@@ -1265,9 +1255,6 @@
         <span class="section-tag reveal">Stock inmediato</span>
         <h2 class="section-title reveal reveal-delay-1">Nuestra<br/><em>colección</em></h2>
       </div>
-      <a href="#muebles-a-medida" class="btn-primary reveal reveal-delay-2" style="animation:none;opacity:1;">
-        Pedido a medida
-      </a>
     </div>
 
     <div class="products-grid" id="productsGrid">
@@ -1569,7 +1556,8 @@
   // - es visible?: "si" para mostrar, "no" para ocultar
   // - descipcion:  texto libre sobre el producto
   // - medidas:     ej: "Alto 45cm · Ancho 30cm · Largo 80cm"
-  // - imagenes:    URL directa de la imagen, o link de Google Drive
+  // - imagenes:    uno o varios links de Drive separados por coma. Si pones más de uno,
+  //                se va a mostrar un carrusel en el detalle del producto. Ej: link1, link2, link3
   //
   // Para publicar: Archivo → Compartir → Publicar en la web → CSV → Publicar
   // Para imágenes Drive: pegar el link de "compartir" (el código lo convierte solo)
@@ -1581,12 +1569,18 @@
 
   // Mapeo: encabezados de TU sheet → nombres internos del código
   // Tu sheet: codigo | nombre | precio | descipcion | medidas | imagenes | es visible?
+  // En "imagenes" podés poner uno o varios links de Drive separados por coma (,) o punto y coma (;)
   function normalizeRow(obj) {
+    const imagenesRaw = obj['imagenes'] || '';
+    const imagenes = imagenesRaw
+      .split(/[,;]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
     return {
       codigo:      obj['codigo']       || '',
       nombre:      obj['nombre']       || '',
       precio:      obj['precio']       || '',
-      imagen:      obj['imagenes']     || '',
+      imagenes:    imagenes,
       visible:     obj['es visible?']  || 'si',
       descripcion: obj['descipcion']   || '',
       medidas:     obj['medidas']      || '',
@@ -1595,12 +1589,13 @@
 
   // Convierte links de Google Drive a URL directa de imagen
   // Acepta: https://drive.google.com/file/d/ID/view  o  https://drive.google.com/open?id=ID
+  // Usamos el endpoint "thumbnail" porque Google bloqueó el viejo uc?export=view para sitios externos
   function driveUrl(url) {
     if (!url) return '';
     const matchFile = url.match(/\/file\/d\/([^/]+)/);
     const matchOpen = url.match(/[?&]id=([^&]+)/);
     const id = (matchFile && matchFile[1]) || (matchOpen && matchOpen[1]);
-    if (id) return `https://drive.google.com/uc?export=view&id=${id}`;
+    if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
     return url; // ya es URL directa, la devuelve igual
   }
 
@@ -1659,20 +1654,79 @@
   const modalSpecs = document.getElementById('modalSpecs');
   const modalWaBtn = document.getElementById('modalWaBtn');
 
-  function openModal(p) {
-    // imagen
-    const existingImg = modalImg.querySelector('img');
-    if (existingImg) existingImg.remove();
-    if (p.imagen && p.imagen.startsWith('http')) {
-      const img = document.createElement('img');
-      img.src = p.imagen;
-      img.alt = p.nombre;
-      modalImg.insertBefore(img, modalImgPH);
-      modalImgPH.style.display = 'none';
-    } else {
+  // ─── CARRUSEL DE IMÁGENES DEL MODAL
+  function buildModalCarousel(images, alt) {
+    // limpiar restos de un carrusel anterior
+    modalImg.querySelectorAll('.carousel-track, .carousel-btn, .carousel-dots').forEach(el => el.remove());
+    const oldImg = modalImg.querySelector('img');
+    if (oldImg) oldImg.remove();
+
+    if (!images || images.length === 0) {
       modalImgPH.style.display = 'flex';
-      modalImgPH.textContent = p.nombre;
+      modalImgPH.textContent = alt;
+      return;
     }
+    modalImgPH.style.display = 'none';
+
+    if (images.length === 1) {
+      const img = document.createElement('img');
+      img.src = images[0];
+      img.alt = alt;
+      modalImg.insertBefore(img, modalImgPH);
+      return;
+    }
+
+    // varias imágenes: armamos el carrusel (mismo patrón que el de "Sobre nosotros")
+    const track = document.createElement('div');
+    track.className = 'carousel-track';
+    images.forEach(src => {
+      const slide = document.createElement('div');
+      slide.className = 'carousel-slide';
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = alt;
+      slide.appendChild(img);
+      track.appendChild(slide);
+    });
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'carousel-btn prev';
+    prevBtn.setAttribute('aria-label', 'Anterior');
+    prevBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="#3a3530" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'carousel-btn next';
+    nextBtn.setAttribute('aria-label', 'Siguiente');
+    nextBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2l5 5-5 5" stroke="#3a3530" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    const dots = document.createElement('div');
+    dots.className = 'carousel-dots';
+    images.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.dataset.index = i;
+      dots.appendChild(dot);
+    });
+
+    modalImg.insertBefore(track, modalImgPH);
+    modalImg.appendChild(prevBtn);
+    modalImg.appendChild(nextBtn);
+    modalImg.appendChild(dots);
+
+    let current = 0;
+    const dotEls = dots.querySelectorAll('.carousel-dot');
+    function goTo(i) {
+      current = (i + images.length) % images.length;
+      track.style.transform = `translateX(-${current * 100}%)`;
+      dotEls.forEach((d, idx) => d.classList.toggle('active', idx === current));
+    }
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    dotEls.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.index)));
+  }
+
+  function openModal(p) {
+    buildModalCarousel(p.imagenes, p.nombre);
 
     // textos
     modalName.textContent  = p.nombre;
@@ -1722,9 +1776,9 @@
     const card = document.createElement('div');
     card.className = 'product-card reveal' + delays[delayIdx % 3];
 
-    const hasImg = p.imagen && p.imagen.startsWith('http');
+    const hasImg = p.imagenes && p.imagenes.length > 0 && p.imagenes[0].startsWith('http');
     const imgContent = hasImg
-      ? `<img src="${p.imagen}" alt="${p.nombre}" loading="lazy">`
+      ? `<img src="${p.imagenes[0]}" alt="${p.nombre}" loading="lazy">`
       : `<div class="img-placeholder">${p.nombre}</div>`;
 
     card.innerHTML = `
@@ -1767,8 +1821,8 @@
         .map(normalizeRow)
         .filter(r => r.nombre && r.visible.toLowerCase() === 'si');
 
-      // Convertir URLs de Drive a URLs directas
-      rows.forEach(r => { r.imagen = driveUrl(r.imagen); });
+      // Convertir URLs de Drive a URLs directas (puede haber varias por producto)
+      rows.forEach(r => { r.imagenes = r.imagenes.map(driveUrl); });
 
       loading.remove();
 
