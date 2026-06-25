@@ -1775,8 +1775,7 @@
   const modalWaBtn = document.getElementById('modalWaBtn');
 
   // ─── CARRUSEL DE IMÁGENES DEL MODAL
-  function buildModalCarousel(images, alt) {
-    // limpiar restos de un carrusel anterior
+  function buildModalCarousel(images, alt) 
     modalImg.querySelectorAll('.carousel-track, .carousel-btn, .carousel-dots').forEach(el => el.remove());
     const oldImg = modalImg.querySelector('img');
     if (oldImg) oldImg.remove();
@@ -1796,7 +1795,7 @@
       return;
     }
 
-    // varias imágenes: armamos el carrusel (mismo patrón que el de "Sobre nosotros")
+    // v
     const track = document.createElement('div');
     track.className = 'carousel-track';
     images.forEach(src => {
@@ -2026,7 +2025,7 @@
   // Para publicar: Archivo → Compartir → Publicar en la web
   //   → elegí la pestaña "galeria" → CSV → Publicar → copiá el link
 
-  const GALLERY_CSV_URL = '';  // ← pegá acá el link CSV de la pestaña galería
+  const GALLERY_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTs-1ZDnjLBKHsvnk_5d0x_48CAsejNezprgmjFZHdDYHzSDlx3Ci_f31GjLD7Iw9mjzotrkJeQlwrL/pub?output=csv'; 
 
   function galleryUrl(url) {
     if (!url) return '';
@@ -2034,7 +2033,7 @@
     const matchOpen = url.match(/[?&]id=([^&]+)/);
     const id = (matchFile && matchFile[1]) || (matchOpen && matchOpen[1]);
     if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
-    return url; // URL directa (postimg, imgur, etc.)
+    return url;
   }
 
   async function loadGallery() {
