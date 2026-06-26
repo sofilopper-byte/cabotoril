@@ -340,23 +340,24 @@
     .about-carousel {
       position: relative;
       width: 100%;
-      aspect-ratio: 3/4; 
+      height: 500px;
       border-radius: 4px;
       overflow: hidden;
       background: var(--sand);
       isolation: isolate;
-      height: 500px;
     }
 
     .carousel-track {
       display: flex;
       height: 100%;
-      width: 100%; 
+      width: 100%;
       transition: transform .6s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
     }
 
     .carousel-slide {
       min-width: 100%;
+      width: 100%;
       flex-shrink: 0;
       height: 100%;
       position: relative;
@@ -364,6 +365,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
     .carousel-slide:nth-child(2) { background: #b9a893; }
     .carousel-slide:nth-child(3) { background: #a08872; }
@@ -1235,26 +1237,25 @@
       }
 
       /* ── HERO ── */
-      .hero { min-height: 100svh; display: flex; flex-direction: column; }
+      .hero { min-height: 100svh; }
       .hero-left {
         padding: 5.5rem 1.5rem 2.5rem;
         max-width: 100%;
         background: linear-gradient(to bottom,
-          rgba(245,240,232,.97) 0%,
-          rgba(245,240,232,.88) 55%,
-          rgba(245,240,232,.4) 80%,
+          rgba(245,240,232,.98) 0%,
+          rgba(245,240,232,.92) 50%,
+          rgba(245,240,232,.5) 75%,
           rgba(245,240,232,0) 100%);
       }
-      .hero-title { font-size: clamp(2rem, 8vw, 2.8rem); }
-      .hero-sub { font-size: .95rem; max-width: 100%; }
+      .hero-title { font-size: clamp(1.9rem, 7vw, 2.6rem); }
+      .hero-sub { font-size: .9rem; max-width: 100%; margin-bottom: 2rem; }
       .hero-scroll { display: none; }
       .hero-badge { display: none; }
 
       /* ── ABOUT ── */
       .about-grid { grid-template-columns: 1fr; gap: 2rem; }
       .about-carousel {
-        height: 320px;
-        aspect-ratio: unset;
+        height: 260px;
       }
       .about-img-stack { height: 280px; }
       .about-values { flex-direction: column; gap: 1.2rem; }
@@ -1691,6 +1692,14 @@
     document.getElementById('aboutNext').addEventListener('click', () => { goTo(current + 1); resetTimer(); });
     document.getElementById('aboutPrev').addEventListener('click', () => { goTo(current - 1); resetTimer(); });
     dots.forEach(d => d.addEventListener('click', () => { goTo(+d.dataset.index); resetTimer(); }));
+
+    // Swipe táctil
+    let touchStartX = 0;
+    track.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) { goTo(dx < 0 ? current + 1 : current - 1); resetTimer(); }
+    }, { passive: true });
 
     autoplay();
   })();
